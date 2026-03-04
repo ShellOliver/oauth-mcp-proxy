@@ -2,3 +2,4 @@ node_modules/
 config.yaml
 tokens.json
 netsuite-env.sh
+coverage/
