@@ -68,6 +68,27 @@ Clone and run locally:
 ```bash
 # 1. Clone the repository
 git clone <repo-url>
+cd oauth-mcp-proxy
+bun install
+
+# 2. Create config.yaml
+cp config.example.yaml config.yaml
+# Edit config.yaml with your credentials
+
+# 3. Generate OAuth tokens
+bun run auth netsuite
+
+# 4. Start the proxy
+bun run proxy
+```
+
+### Option 2: Local Installation
+
+Clone and run locally:
+
+```bash
+# 1. Clone the repository
+git clone <repo-url>
 cd oauth-mcp-setup
 npm install
 
@@ -184,6 +205,49 @@ export NOTION_CLIENT_SECRET="your-notion-secret"
   }
 }
 ```
+
+## 📝 Commit Message Format
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/) format for automated versioning and changelog generation.
+
+**Format:**
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+**Types:**
+- `feat:` - New feature (triggers minor version bump)
+- `fix:` - Bug fix (triggers patch version bump)
+- `BREAKING CHANGE:` - Breaking changes (triggers major version bump)
+- `chore:`, `docs:`, `style:`, `refactor:`, `test:` - No version bump
+
+**Examples:**
+```
+feat(auth): add PKCE flow support
+fix(proxy): handle 401 errors with auto token refresh
+chore(deps): upgrade dependencies
+```
+
+## 🚀 Release Process
+
+Releases are automated using [semantic-release](https://github.com/semantic-release/semantic-release):
+
+1. Commit changes with conventional commit format
+2. Push to main branch
+3. Manually trigger release workflow (optional dry-run available)
+4. semantic-release analyzes commits, bumps version, creates tag, generates changelog, publishes to npm and GitHub
+
+**Manual trigger:** Go to Actions → Release → Run workflow → Set `dry_run` to `false` to release, or `true` to preview
+
+**Version bumping is automatic:**
+- Each `feat:` commit → minor version bump
+- Each `fix:` commit → patch version bump
+- Each `BREAKING CHANGE:` → major version bump
+- Other commit types → no release triggered
 
 ## 🏗️ Architecture
 
