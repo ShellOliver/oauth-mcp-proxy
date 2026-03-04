@@ -1,6 +1,6 @@
 {
   "name": "oauth-mcp-proxy",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "OAuth MCP Proxy - Bypass buggy OAuth implementations in MCP clients by handling authentication locally",
   "main": "oauth-helper.js",
   "type": "module",
