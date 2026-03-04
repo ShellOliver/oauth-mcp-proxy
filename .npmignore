@@ -13,6 +13,9 @@ plan-move-tokens.md
 .gitignore
 bun.lock
 *.log
+.releaserc.json
+.commitlintrc.json
+.husky/
 
 # Node modules (handled by npm)
 node_modules/
