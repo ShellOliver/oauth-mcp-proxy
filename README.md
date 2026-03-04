@@ -24,8 +24,13 @@ OAuth MCP Proxy handles authentication independently of your MCP client:
 1. **Local OAuth 2.0 with PKCE** - Complete auth flow managed locally
 2. **Generic MCP Proxy** - Forwards requests to any OAuth-enabled service
 3. **Multi-Service Support** - NetSuite, Notion, Jira, GitHub, all in one place
-4. **Automatic Token Refresh** - Tokens refreshed on 401/403 with retry
-5. **Client-Agnostic** - Works with OpenCode, Claude Desktop, VS Code, Cursor, etc.
+4. **Automatic Token Refresh** - Tokens refreshed on 401/403 with single retry
+5. **Client-Agnostic** - Works with any MCP client (OpenCode, Claude Desktop, VS Code, Cursor)
+6. **Auto Discovery** - Automatically discovers tools from all configured services
+7. **Prefix Naming** - Clear tool names like `netsuite.ns_runSavedSearch`, `notion.searchPages`
+8. **Location-Independent** - Works in any project directory
+9. **Simple Config** - Just YAML with environment variable support
+10. **Extensible** - Plugin system for custom token storage
 
 ## 🚀 Quick Start
 
@@ -49,6 +54,8 @@ EOF
 
 # 2. Generate OAuth tokens
 npx oauth-mcp-proxy auth netsuite --config ./config.yaml
+
+This will open a browser page where you can authenticate and authorize the application.
 
 # 3. Start the proxy
 npx oauth-mcp-proxy proxy --config ./config.yaml
@@ -180,75 +187,18 @@ export NOTION_CLIENT_SECRET="your-notion-secret"
 
 ## 🏗️ Architecture
 
-### How It Works
+### User Flow
 
 ```mermaid
-sequenceDiagram
-    participant MCP Client
-    participant Proxy Server
-    participant tokens.json
-    participant Remote Service
-
-    MCP Client->>Proxy: tools/list
-    Proxy->>tokens: Load tokens
-    Proxy->>Remote: Discover tools (Bearer token)
-    Remote->>Proxy: Return tools list
-    Proxy->>MCP Client: Return prefixed tools
-    
-    MCP Client->>Proxy: tools/call (netsuite.ns_runSavedSearch)
-    Proxy->>tokens: Load tokens
-    Proxy->>Remote: Call tool (Authorization header)
-    alt Token Expired (401/403)
-        Proxy->>Remote: Refresh token
-        Proxy->>Remote: Retry call
-    end
-    Remote->>Proxy: Return result
-    Proxy->>MCP Client: Return result
+flowchart LR
+    A[Create config.yaml] --> B[Run auth command]
+    B --> C[Browser opens for OAuth login]
+    C --> D[Tokens saved to tokens.json]
+    D --> E[Start proxy server]
+    E --> F[MCP Client connects]
+    F --> G[Auto-discover tools]
+    G --> H[Use tools with auto token refresh]
 ```
-
-### Multi-Service Support
-
-```mermaid
-graph LR
-    subgraph "OAuth MCP Proxy"
-        config[config.yaml]
-        helper[oauth-helper]
-        proxy[mcp-proxy]
-        tokens[tokens.json]
-    end
-    
-    subgraph "Services"
-        netsuite[NetSuite]
-        notion[Notion]
-        jira[Jira]
-        github[GitHub]
-    end
-    
-    helper --> netsuite
-    helper --> notion
-    helper --> jira
-    helper --> github
-    
-    helper --> tokens
-    config --> helper
-    config --> proxy
-    proxy --> tokens
-    proxy --> netsuite
-    proxy --> notion
-    proxy --> jira
-    proxy --> github
-```
-
-## 🎯 Key Features
-
-- ✅ **Client-Agnostic** - Works with any MCP client (OpenCode, Claude Desktop, VS Code, Cursor)
-- ✅ **Multi-Service** - Configure multiple OAuth providers in one config.yaml
-- ✅ **Auto Discovery** - Automatically discovers tools from all configured services
-- ✅ **Token Refresh** - Automatic refresh on 401/403 with single retry
-- ✅ **Prefix Naming** - Clear tool names like `netsuite.ns_runSavedSearch`, `notion.searchPages`
-- ✅ **Location-Independent** - Works in any project directory
-- ✅ **Simple Config** - Just YAML with environment variable support
-- ✅ **Extensible** - Plugin system for custom token storage
 
 ## 📖 Usage Examples
 
@@ -378,28 +328,6 @@ Refresh token revoked or client secret changed:
 npx oauth-mcp-proxy auth <service-name>
 ```
 
-## 🔒 Security
-
-⚠️ **Never commit sensitive files**
-
-Files to exclude from version control:
-- `config.yaml` - Contains client secrets
-- `tokens.json` - Contains access and refresh tokens
-
-These are already in `.gitignore`:
-```
-config.yaml
-tokens.json
-```
-
-### Best Practices
-
-1. **Use environment variables** for credentials
-2. **Limit token scope** to minimum required permissions
-3. **Rotate client secrets** regularly
-4. **Monitor token usage** for unusual patterns
-5. **Never log or print tokens** in production code
-
 ## 📄 Token File Format
 
 `tokens.json` stores tokens for all services:
@@ -435,9 +363,4 @@ MIT
 
 ## 🤝 Contributing
 
-Contributions welcome! Areas for improvement:
-- Token encryption support
-- Additional plugins for popular services
-- Token health check functionality
-- Plugin system enhancements
-- Documentation improvements
+Contributions welcome!
