@@ -1,0 +1,40 @@
+# OAuth Token Manager Configuration
+# Supports multiple OAuth MCP services
+
+services:
+  netsuite:
+    client_id: ${NETSUITE_CLIENT_ID}
+    client_secret: ${NETSUITE_CLIENT_SECRET}
+    redirect_uri: http://localhost:8080/callback
+    scope: mcp
+    auth_url: https://<account-id>.app.netsuite.com/app/login/oauth2/authorize.nl
+    token_url: https://<account-id>.suitetalk.api.netsuite.com/services/rest/auth/oauth2/v1/token
+    mcp_url: https://<account-id>.suitetalk.api.netsuite.com/services/mcp/v1/all
+    # Plugin defaults to ./plugins/local.js if not specified
+
+  notion:
+    client_id: ${NOTION_CLIENT_ID}
+    client_secret: ${NOTION_CLIENT_SECRET}
+    redirect_uri: http://localhost:8080/callback
+    scope: "read write"
+    auth_url: https://api.notion.com/v1/oauth/authorize
+    token_url: https://api.notion.com/v1/oauth/token
+    mcp_url: https://mcp.notion.com/mcp
+
+  jira:
+    client_id: ${JIRA_CLIENT_ID}
+    client_secret: ${JIRA_CLIENT_SECRET}
+    redirect_uri: http://localhost:8080/callback
+    scope: "read:jira-work"
+    auth_url: https://auth.atlassian.com/authorize
+    token_url: https://auth.atlassian.com/oauth/token
+    mcp_url: https://your-domain.atlassian.net/mcp
+
+  github:
+    client_id: ${GITHUB_CLIENT_ID}
+    client_secret: ${GITHUB_CLIENT_SECRET}
+    redirect_uri: http://localhost:8080/callback
+    scope: "repo read:user"
+    auth_url: https://github.com/login/oauth/authorize
+    token_url: https://github.com/login/oauth/access_token
+    mcp_url: https://api.github.com/mcp
