@@ -1,15 +1,56 @@
 {
-  "name": "oauth-token-manager",
-  "version": "2.0.0",
+  "name": "oauth-mcp-proxy",
+  "version": "2.1.0",
+  "description": "OAuth MCP Proxy - Bypass buggy OAuth implementations in MCP clients by handling authentication locally",
+  "main": "oauth-helper.js",
   "type": "module",
+  "bin": {
+    "oauth-helper": "./oauth-helper.js",
+    "mcp-proxy": "./mcp-proxy.js"
+  },
   "scripts": {
     "auth": "node oauth-helper.js",
-    "proxy": "node mcp-proxy.js"
+    "proxy": "node mcp-proxy.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
+  },
+  "keywords": [
+    "oauth",
+    "mcp",
+    "model-context-protocol",
+    "authentication",
+    "proxy"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/oauth-mcp-proxy"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
     "js-yaml": "^4.1.0",
     "node-fetch": "^3.3.2",
     "open": "^10.1.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-node": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "*.js",
+      "!node_modules/**",
+      "!tests/**"
+    ]
   }
 }

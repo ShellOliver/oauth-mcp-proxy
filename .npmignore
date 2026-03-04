@@ -1,0 +1,23 @@
+# Configuration files (users provide these)
+config.yaml
+tokens.json
+
+# Documentation (users don't need these in npm package)
+README.md
+plan.md
+plan-move-tokens.md
+.github/
+
+# Development files
+.git/
+.gitignore
+bun.lock
+*.log
+
+# Node modules (handled by npm)
+node_modules/
+
+# Test files
+test/
+tests/
+*.test.js

@@ -7,6 +7,29 @@ import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
 
+const args = process.argv.slice(2);
+let configPath = './config.yaml';
+let tokensPath = null;
+let pluginPath = null;
+let serviceName = null;
+
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === '--config' || args[i] === '-c') {
+    configPath = args[++i];
+  } else if (args[i] === '--tokens' || args[i] === '-t') {
+    tokensPath = args[++i];
+  } else if (args[i] === '--plugin' || args[i] === '-p') {
+    pluginPath = args[++i];
+  } else if (!args[i].startsWith('--') && !args[i].startsWith('-')) {
+    serviceName = args[i];
+  }
+}
+
+if (!tokensPath) {
+  const configDir = path.dirname(path.resolve(configPath));
+  tokensPath = path.join(configDir, 'tokens.json');
+}
+
 function expandEnvVars(obj) {
   if (typeof obj === 'string') {
     return obj.replace(/\$\{([^}]+)\}/g, (_, name) => process.env[name] || '');
@@ -24,14 +47,12 @@ function expandEnvVars(obj) {
   return obj;
 }
 
-const rawConfig = yaml.load(fs.readFileSync('./config.yaml', 'utf8'));
+const rawConfig = yaml.load(fs.readFileSync(configPath, 'utf8'));
 const config = expandEnvVars(rawConfig);
-
-let serviceName = process.argv[2];
 
 if (!serviceName) {
   console.error('❌ Error: Service name is required');
-  console.error('Usage: node oauth-helper.js <service-name>');
+  console.error('Usage: npx oauth-mcp-proxy auth <service-name>');
   if (config.services) {
     console.error('\nAvailable services:');
     Object.keys(config.services).forEach(s => console.error(`  - ${s}`));
@@ -56,16 +77,16 @@ function generatePKCE() {
 }
 
 async function runPlugin(tokenData) {
-  const pluginPath = serviceConfig.plugin || './plugins/local.js';
-  const resolvedPath = path.resolve(pluginPath);
-  
+  const resolvedPluginPath = pluginPath || serviceConfig.plugin || './plugins/local.js';
+  const resolvedPath = path.resolve(resolvedPluginPath);
+
   if (fs.existsSync(resolvedPath)) {
     const plugin = await import(resolvedPath);
     if (typeof plugin.default === 'function') {
-      await plugin.default(tokenData, serviceConfig, serviceName);
+      await plugin.default(tokenData, serviceConfig, serviceName, tokensPath);
     }
   } else {
-    console.error('Plugin not found:', pluginPath);
+    console.error('Plugin not found:', resolvedPluginPath);
     console.error('Token data:', tokenData);
   }
 }

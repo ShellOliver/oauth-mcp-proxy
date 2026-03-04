@@ -1,9 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-export default async function(tokenData, config, serviceName) {
-  const tokensPath = path.join(process.cwd(), 'tokens.json');
-  
+export default async function(tokenData, config, serviceName, tokensPath) {
   const expiresAt = Date.now() / 1000 + parseInt(tokenData.expires_in || 3600);
   
   const serviceTokenData = {

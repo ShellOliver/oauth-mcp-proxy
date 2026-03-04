@@ -9,22 +9,42 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const args = process.argv.slice(2);
+let configPath = './config.yaml';
+let tokensPath = null;
+
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === '--config' || args[i] === '-c') {
+    configPath = args[++i];
+  } else if (args[i] === '--tokens' || args[i] === '-t') {
+    tokensPath = args[++i];
+  }
+}
+
+if (!tokensPath) {
+  const configDir = path.dirname(path.resolve(configPath));
+  tokensPath = path.join(configDir, 'tokens.json');
+}
+
+const globalTokensPath = tokensPath;
+
 class GenericOAuthMCPProxy {
-  constructor() {
+  constructor(tokensPath) {
     this.tokens = {};
     this.toolCache = new Map();
+    this.tokensPath = tokensPath || globalTokensPath;
     this.loadTokens();
   }
 
   loadTokens() {
-    const tokensPath = path.join(process.cwd(), 'tokens.json');
     try {
-      if (fs.existsSync(tokensPath)) {
-        this.tokens = JSON.parse(fs.readFileSync(tokensPath, 'utf8'));
-        console.error('[MCP Proxy] Loaded tokens for services:', Object.keys(this.tokens).join(', '));
+      if (fs.existsSync(this.tokensPath)) {
+        this.tokens = JSON.parse(fs.readFileSync(this.tokensPath, 'utf8'));
+        console.error('[MCP Proxy] Loaded tokens from:', this.tokensPath);
+        console.error('[MCP Proxy] Services:', Object.keys(this.tokens).join(', '));
       } else {
-        console.error('[MCP Proxy] No tokens.json found in current directory');
-        console.error('[MCP Proxy] To generate tokens, run: npm run auth <service-name>');
+        console.error('[MCP Proxy] No tokens.json found at:', this.tokensPath);
+        console.error('[MCP Proxy] To generate tokens, run: npx @sheldon/oauth-mcp-proxy auth <service-name> --config', configPath);
       }
     } catch (err) {
       console.error('[MCP Proxy] Error loading tokens.json:', err.message);
@@ -79,14 +99,19 @@ class GenericOAuthMCPProxy {
       return true;
     } catch (err) {
       console.error(`[MCP Proxy] ❌ Token refresh failed for ${serviceName}:`, err.message);
-      console.error(`[MCP Proxy] To re-authenticate, run: npm run auth ${serviceName}`);
+      console.error(`[MCP Proxy] To re-authenticate, run: npx oauth-mcp-proxy auth ${serviceName}`);
       return false;
     }
   }
 
   saveTokens() {
-    const tokensPath = path.join(process.cwd(), 'tokens.json');
-    fs.writeFileSync(tokensPath, JSON.stringify(this.tokens, null, 2));
+    const tokensDir = path.dirname(this.tokensPath);
+
+    if (!fs.existsSync(tokensDir)) {
+      fs.mkdirSync(tokensDir, { recursive: true });
+    }
+
+    fs.writeFileSync(this.tokensPath, JSON.stringify(this.tokens, null, 2));
   }
 
   async callRemoteMCP(serviceName, method, params = {}) {
@@ -239,50 +264,32 @@ class GenericOAuthMCPProxy {
 }
 
 async function main() {
-  const proxy = new GenericOAuthMCPProxy();
+  const proxy = new GenericOAuthMCPProxy(tokensPath);
   const server = proxy.createMCPServer();
   const transport = new StdioServerTransport();
 
   await server.connect(transport);
-  
+
   console.error('[MCP Proxy] Server started and ready');
+  console.error('[MCP Proxy] Config:', configPath);
+  console.error('[MCP Proxy] Tokens:', tokensPath);
   console.error('');
   console.error('═══════════════════════════════════════════════════════════');
-  console.error('📋 Setup Instructions');
+  console.error('📋 Usage Examples');
   console.error('═══════════════════════════════════════════════════════════');
   console.error('');
   console.error('1. Generate OAuth tokens:');
-  console.error('   npm run auth <service-name>');
+  console.error(`   npx @sheldon/oauth-mcp-proxy auth <service-name> --config ${configPath}`);
   console.error('');
-  console.error('2. Configure your MCP client with this command:');
+  console.error('2. Configure your MCP client:');
   console.error('');
-  const proxyPath = path.join(__dirname, 'mcp-proxy.js');
-  console.error(`   node "${proxyPath}"`);
-  console.error('');
-  console.error('3. Copy and paste the path above into your MCP client config:');
-  console.error('');
-  console.error('   OpenCode (~/.config/opencode/opencode.json):');
   console.error('   {');
-  console.error('     "mcp": {');
-  console.error('       "oauth-proxy": {');
-  console.error('         "type": "local",');
-  console.error('         "command": ["node", "' + proxyPath + '"]');
-  console.error('       }');
-  console.error('     }');
+  console.error('     "command": "npx",');
+  console.error('     "args": ["@sheldon/oauth-mcp-proxy", "proxy", "--config", "' + configPath + '"]');
   console.error('   }');
   console.error('');
-  console.error('   Claude Desktop (~/.claude/settings/mcp-settings.json):');
-  console.error('   {');
-  console.error('     "oauth-proxy": {');
-  console.error('       "command": "node",');
-  console.error('       "args": ["' + proxyPath + '"]');
-  console.error('     }');
-  console.error('   }');
-  console.error('');
+  console.error('Note: tokens.json will be automatically created next to your config.yaml');
   console.error('═══════════════════════════════════════════════════════════');
-  console.error('');
-  console.error('Full MCP proxy path (copy this):');
-  console.error(proxyPath);
   console.error('');
 }
 

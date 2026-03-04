@@ -1,4 +1,4 @@
-# OAuth Token Manager Configuration
+# OAuth MCP Proxy Configuration
 # Supports multiple OAuth MCP services
 
 services:
